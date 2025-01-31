@@ -21,7 +21,7 @@
  * - HT_SH1107Wire : Pour gérer l'affichage OLED.
  * 
  * Auteur : [Votre Nom]
- * Date : [Date]
+ * Date : [Date]++++++++++++++++++++++++++
  */
 #include <Arduino.h>
 
