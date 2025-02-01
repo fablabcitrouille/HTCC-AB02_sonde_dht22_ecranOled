@@ -1,6 +1,11 @@
 Ce programme utilise un module Heltec CubeCell HTCC-AB02 pour lire la température et l'humidité d'un capteur DHT22 et envoyer ces données sous forme de trame hexadécimale.
 La trame de données est envoyée via la communication série et contient les valeurs de température et d'humidité en hexadécimal.
 
+
+Le cycle de lecture se fait dans le loop (delay)
+
+
+
 Démarche :
 1. Connexion au capteur DHT22 : Le capteur DHT22 est connecté à la broche GPIO5 (D1) et alimenté par la broche VEXT.
 2. Lecture des données du capteur DHT22 : La température et l'humidité sont lues toutes les 20 secondes.

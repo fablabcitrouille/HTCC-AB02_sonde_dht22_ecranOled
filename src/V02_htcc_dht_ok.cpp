@@ -1,13 +1,13 @@
 /*
  * Ce programme utilise un module Heltec CubeCell HTCC-AB02 pour lire la température et l'humidité d'un capteur DHT22 et envoyer ces données sous forme de trame hexadécimale.
- * La trame de données est envoyée via la communication série et contient les valeurs de température et d'humidité en hexadécimal.
+ * La trame de données est envoyée via la communication série et contient les valeurs de température, d'humidité et de tension de la batterie en hexadécimal.
  * 
  * Démarche :
  * 1. Connexion au capteur DHT22 : Le capteur DHT22 est connecté à la broche GPIO5 (D1) et alimenté par la broche VEXT.
  * 2. Lecture des données du capteur DHT22 : La température et l'humidité sont lues toutes les 20 secondes.
- * 3. Création de la trame de données : Les valeurs de température et d'humidité sont converties en hexadécimal et concaténées pour former la trame de données.
+ * 3. Création de la trame de données : Les valeurs de température, d'humidité et de tension de la batterie sont converties en hexadécimal et concaténées pour former la trame de données.
  * 4. Envoi de la trame de données : La trame de données est envoyée via la communication série et imprimée pour le débogage.
- * 5. Affichage des données : Les valeurs de température et d'humidité sont affichées sur un écran OLED et sur la sortie série terminal.
+ * 5. Affichage des données : Les valeurs de température, d'humidité et de tension de la batterie sont affichées sur un écran OLED et sur la sortie série terminal.
  * 6. Affichage du nom du fichier : Le nom du fichier source est affiché sur l'écran OLED au démarrage.
  * 7. Gestion de l'alimentation : La broche VEXT est utilisée pour activer et désactiver l'alimentation du capteur DHT22 afin de réduire la consommation d'énergie.
  * 8. La trame préparée pourra être ensuite envoyée sur le serveur LORAWAN TTN et fera l'objet d'un autre code.
@@ -92,7 +92,7 @@ void setup() {
   display.display();
   delay(5000); // Attendre 5 secondes pour que le texte soit lisible
 
-  //pour afficher dès l'allumage
+  // Pour afficher dès l'allumage
   float temperature = 0.0;
   float humidity = 0.0;
   // Lire les valeurs de température et d'humidité du capteur DHT22
@@ -105,13 +105,13 @@ void loop() {
   float temperature = 0.0;
   float humidity = 0.0;
 
-  // Lire les valeurs de température et d'humidité du capteur DHT22
+  // Lire les données du capteur DHT22
   readDHT22(temperature, humidity);
 
-  // Créer une trame de données
+  // Créer la trame de données
   String dataFrame = createDataFrame(temperature, humidity);
 
-  // Envoyer la trame de données
+  // Envoyer la trame de données via la communication série
   sendDataFrame(dataFrame);
 
   // Afficher les données sur l'écran OLED et sur la sortie série terminal
@@ -127,7 +127,9 @@ void readDHT22(float &temperature, float &humidity) {
 
   // Lire la température et l'humidité du capteur DHT22
   temperature = dht.readTemperature();
+  delay(1000);
   humidity = dht.readHumidity();
+  delay(1000);
 
   // Vérifier si les lectures ont échoué et réessayer
   if (isnan(temperature) || isnan(humidity)) {
@@ -147,7 +149,14 @@ String createDataFrame(float temperature, float humidity) {
   dataFrame += String((int)(temperature * 100), HEX); // Multiplier par 100 pour conserver deux décimales
   dataFrame += ",";
   dataFrame += String((int)(humidity * 100), HEX); // Multiplier par 100 pour conserver deux décimales
-  
+
+  // Lire la tension de la batterie
+  float batteryVoltage = readBatteryVoltage();
+
+  // Ajouter la tension de la batterie à la trame
+  dataFrame += ",";
+  dataFrame += String((int)batteryVoltage, HEX); // Ajouter la tension de la batterie en millivolts
+
   return dataFrame;
 }
 
@@ -157,11 +166,18 @@ void sendDataFrame(const String &dataFrame) {
 }
 
 void displayData(float temperature, float humidity) {
+  // Lire la tension de la batterie
+  float batteryVoltage = readBatteryVoltage();
+
+  // Créer la trame de données
+  String dataFrame = createDataFrame(temperature, humidity);
+
   // Afficher les données sur l'écran OLED
   display.clear();
   display.drawString(0, 0, "Temperature: " + String(temperature) + " C");
   display.drawString(0, 16, "Humidity: " + String(humidity) + " %");
- 
+  display.drawString(0, 32, "Battery: " + String(batteryVoltage) + " mV");
+  display.drawString(0, 48, "Data Frame: " + dataFrame);
   display.display();
 
   // Afficher les données sur la sortie série terminal
@@ -172,5 +188,19 @@ void displayData(float temperature, float humidity) {
   Serial.print("Humidity: ");
   Serial.print(humidity);
   Serial.println(" %");
-  
+
+  Serial.print("Battery Voltage: ");
+  Serial.print(batteryVoltage);
+  Serial.println(" mV");
+
+  Serial.print("Data Frame: ");
+  Serial.println(dataFrame);
+}
+
+float readBatteryVoltage() {
+  // Appel de la fonction existante pour obtenir la tension de la batterie en millivolts
+  uint16_t batteryVoltage = getBatteryVoltage();
+
+  // Retourner la valeur en millivolts
+  return static_cast<float>(batteryVoltage);
 }
