@@ -180,7 +180,7 @@ void displayData(float temperature, float humidity) {
   display.drawString(0, 48, "Data Frame: " + dataFrame);
   display.display();
 
-  // Afficher les données sur la sortie série terminal
+  // Afficher les données sur la sortie série terminal-----------------
   Serial.print("Temperature: ");
   Serial.print(temperature);
   Serial.println(" C");
